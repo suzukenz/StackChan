@@ -1,0 +1,51 @@
+diff --git i/main/xiaozhi-server/core/connection.py w/main/xiaozhi-server/core/connection.py
+index 4e45032..c2eb056 100644
+--- i/main/xiaozhi-server/core/connection.py
++++ w/main/xiaozhi-server/core/connection.py
+@@ -696,6 +696,7 @@ class ConnectionHandler:
+                 "id": da_tc_id,
+                 "function": {"arguments": '{"response": "好呀，你想听什么类型的呀？童话、冒险还是搞笑的？选一个我给你开讲~"}', "name": "direct_answer"},
+                 "type": "function", "index": 0,
++                "extra_content": {"google": {"thought_signature": "context_engineering_is_the_way_to_go"}},
+             }],
+             is_temporary=True,
+         ))
+@@ -714,6 +715,7 @@ class ConnectionHandler:
+                     "id": tc_id,
+                     "function": {"arguments": '{"say_goodbye": "再见，下次再聊~"}', "name": "handle_exit_intent"},
+                     "type": "function", "index": 0,
++                    "extra_content": {"google": {"thought_signature": "context_engineering_is_the_way_to_go"}},
+                 }],
+                 is_temporary=True,
+             ))
+@@ -1416,6 +1418,10 @@ class ConnectionHandler:
+                     },
+                     "type": "function",
+                     "index": idx,
++                    "extra_content": tool_call_data.get(
++                        "extra_content",
++                        {"google": {"thought_signature": "context_engineering_is_the_way_to_go"}},
++                    ),
+                 }
+                 for idx, (_, tool_call_data) in enumerate(record_tools)
+             ]
+@@ -1459,6 +1465,10 @@ class ConnectionHandler:
+                     },
+                     "type": "function",
+                     "index": idx,
++                    "extra_content": tool_call_data.get(
++                        "extra_content",
++                        {"google": {"thought_signature": "context_engineering_is_the_way_to_go"}},
++                    ),
+                 }
+                 for idx, (_, tool_call_data) in enumerate(need_llm_tools)
+             ]
+@@ -1829,3 +1839,8 @@ class ConnectionHandler:
+                 tool_calls_list[tool_index]["name"] = tool_call.function.name
+             if tool_call.function.arguments:
+                 tool_calls_list[tool_index]["arguments"] += tool_call.function.arguments
++            # Gemini (OpenAI互換API) はストリーム中の tool_call に thought_signature を
++            # extra_content として載せてくる。履歴再構築時に返送しないと 400 になるので保持する
++            extra_content = getattr(tool_call, "extra_content", None)
++            if extra_content:
++                tool_calls_list[tool_index]["extra_content"] = extra_content

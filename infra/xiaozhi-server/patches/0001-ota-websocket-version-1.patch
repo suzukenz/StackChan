@@ -1,0 +1,17 @@
+diff --git a/main/xiaozhi-server/core/api/ota_handler.py b/main/xiaozhi-server/core/api/ota_handler.py
+index 1e3b3bd..60635b0 100644
+--- a/main/xiaozhi-server/core/api/ota_handler.py
++++ b/main/xiaozhi-server/core/api/ota_handler.py
+@@ -292,6 +292,12 @@ class OTAHandler(BaseHandler):
+                 return_json["websocket"] = {
+                     "url": self._get_websocket_url(local_ip, websocket_port),
+                     "token": token,
++                    # StackChan: xiaozhi-esp32 v2.2.4 defaults to protocol version 1
++                    # and only overrides it via this OTA field. Devices that were
++                    # ever paired with the official server (which sends version
++                    # 2/3) keep the newer value cached in NVS, which breaks audio
++                    # on this server (v1-only). Always advertise version 1.
++                    "version": 1,
+                 }
+                 self.logger.bind(tag=TAG).info(
+                     f"未配置MQTT网关，为设备 {device_id} 下发WebSocket配置"

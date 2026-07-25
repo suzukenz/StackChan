@@ -1,0 +1,74 @@
+# StackChan Phase 1: xiaozhi-esp32-server 日本語向けオーバーレイ設定テンプレート。
+#
+# 使い方:
+#   cp data/.config.yaml.example data/.config.yaml
+#   data/.config.yaml を編集して <...> のプレースホルダを埋める
+#   docker compose up -d
+#
+# これはオーバーレイです。ここに書いたキーだけがイメージ内蔵の config.yaml を
+# 上書きします（キー単位ではなくセクション単位でマージされるため、あるセクション
+# を書く場合はそのセクションに必要なキーを一通り含めること）。
+# 参考: https://github.com/xinnan-tech/xiaozhi-esp32-server (tag: v0.9.6)
+#       docs/Deployment.md, main/xiaozhi-server/config.yaml
+# 先行事例: https://blog.rpine.net/posts/stackchan-local-llm
+
+server:
+  # OTA応答でデバイスに配るWebSocket URL。<LAN_IP> をこのMacのLAN内IPに置き換える。
+  # 例: ws://192.168.1.50:8000/xiaozhi/v1/
+  websocket: ws://<LAN_IP>:8000/xiaozhi/v1/
+  # OTA応答の server_time.timezone_offset に使われる（分ではなく時間単位で指定）
+  timezone_offset: +9
+  # MQTTゲートウェイを使わない（null のときだけ OTA が websocket 設定を配る）
+  mqtt_gateway: null
+
+# 終了ワード。ユーザーの発話がここに一致すると（意図認識経由で）対話を終了する。
+# 上流デフォルトは中国語（"退出" "关闭"）。日本語運用では日本語のワードに置き換える。
+exit_commands:
+  - "さようなら"
+  - "バイバイ"
+  - "終了"
+
+prompt: |
+  あなたはスタックチャン。日本語で、明るくフレンドリーな口調で話す小さなロボットです。
+  返答は簡潔に、1〜2文程度でまとめてください。長い説明や箇条書きは避けてください。
+
+selected_module:
+  VAD: SileroVAD
+  ASR: FunASR
+  LLM: GeminiLLM
+  TTS: EdgeTTS
+  Memory: nomem
+  # tool calling（音量調整・終了ワード等）が使えない/不安定な場合は
+  # intent_llm または nointent に切り替える（.suzukenz/findings-2026-07-25.md 参照）
+  Intent: function_call
+
+ASR:
+  FunASR:
+    type: fun_local
+    model_dir: models/SenseVoiceSmall
+    output_dir: tmp/
+    # auto だと短文の言語誤判定が起きやすいので ja を明示する
+    language: ja
+
+LLM:
+  GeminiLLM:
+    # Gemini の OpenAI 互換エンドポイントを使う（APIキーは https://aistudio.google.com/apikey）。
+    # 注意: ネイティブの `type: gemini` は使わないこと。デバイスMCPツールの
+    # スキーマに含まれる minimum/maximum を Gemini SDK が受け付けず、
+    # 「Unknown field for Schema: minimum」でLLM呼び出しが全滅し、中国語の
+    # エラー定型文（"主人，小智现在有点忙"）が再生されるバグがある（v0.9.6で確認）。
+    type: openai
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    # 音声対話は応答速度重視で flash 系を推奨。
+    # 正確なモデルIDは https://ai.google.dev/gemini-api/docs/models で要確認
+    model_name: gemini-3.5-flash
+    api_key: <GEMINI_API_KEY をここに>
+
+TTS:
+  EdgeTTS:
+    type: edge
+    voice: ja-JP-NanamiNeural
+    # voice を変えるだけでは効かない。language を明示しないと LLM が中国語で
+    # 応答してしまう落とし穴があるので必ず併記する
+    language: "日本語"
+    output_dir: tmp/

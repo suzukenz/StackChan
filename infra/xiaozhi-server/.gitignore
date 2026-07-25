@@ -1,0 +1,14 @@
+# Upstream source clone (fetched by build.sh, not vendored)
+upstream/
+
+# Generated / secret local config
+data/.config.yaml
+data/bin/
+data/*.log
+data/.wakeup_words.yaml
+
+# Downloaded model weights
+models/
+
+# Scratch / logs
+tmp/

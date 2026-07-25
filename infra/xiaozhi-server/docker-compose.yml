@@ -1,0 +1,25 @@
+# StackChan Phase 1: self-hosted xiaozhi-esp32-server (server only, no manager-web).
+#
+# The upstream project only publishes x86_64 images from server_0.8.2 onward, so on
+# Apple Silicon this MUST be a locally built image. Run `./build.sh` first to produce
+# the `xiaozhi-esp32-server:local-arm64` image referenced below.
+#
+# See docs/docker-build.md in the upstream repo and README.md in this directory.
+
+services:
+  xiaozhi-esp32-server:
+    image: xiaozhi-esp32-server:local-arm64
+    container_name: xiaozhi-esp32-server
+    restart: always
+    environment:
+      - TZ=Asia/Tokyo
+    ports:
+      # WebSocket endpoint (device audio/protocol traffic)
+      - "8000:8000"
+      # HTTP endpoint: OTA (/xiaozhi/ota/) and vision analysis, server-only deployment
+      - "8003:8003"
+    volumes:
+      # Overlay config: data/.config.yaml overrides the image's built-in config.yaml
+      - ./data:/opt/xiaozhi-esp32-server/data
+      # SenseVoiceSmall ASR model weights (download with ./download-model.sh)
+      - ./models/SenseVoiceSmall/model.pt:/opt/xiaozhi-esp32-server/models/SenseVoiceSmall/model.pt
