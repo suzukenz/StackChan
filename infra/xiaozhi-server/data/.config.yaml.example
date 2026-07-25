@@ -16,10 +16,20 @@ server:
   # OTA応答でデバイスに配るWebSocket URL。<LAN_IP> をこのMacのLAN内IPに置き換える。
   # 例: ws://192.168.1.50:8000/xiaozhi/v1/
   websocket: ws://<LAN_IP>:8000/xiaozhi/v1/
+  # カメラ画像の解析エンドポイント。デバイスが撮影した写真をここにPOSTする。
+  # server セクションはセクション単位で上書きされるため、これを書かないと
+  # デバイスに接続不能なプレースホルダーURLが配られ、カメラ系ツールが
+  # 「Failed to connect to explain URL」で失敗する。
+  vision_explain: http://<LAN_IP>:8003/mcp/vision/explain
   # OTA応答の server_time.timezone_offset に使われる（分ではなく時間単位で指定）
   timezone_offset: +9
   # MQTTゲートウェイを使わない（null のときだけ OTA が websocket 設定を配る）
   mqtt_gateway: null
+
+# ツール呼び出し失敗時に読み上げる固定メッセージ（patches/0003-tool-error-speech.patch）。
+# 未設定だと生のエラー文字列（中国語定型文や「MCP错误: ...」等）がそのまま
+# 読み上げられてしまう。原文はサーバーログに warning で残る。
+tool_error_speech: "ごめんね、いまは うまくできなかったみたい。ちがうおはなしを しようよ！"
 
 # 終了ワード。ユーザーの発話がここに一致すると（意図認識経由で）対話を終了する。
 # 上流デフォルトは中国語（"退出" "关闭"）。日本語運用では日本語のワードに置き換える。
@@ -36,6 +46,8 @@ selected_module:
   VAD: SileroVAD
   ASR: FunASR
   LLM: GeminiLLM
+  # カメラ画像の解析（vision_explain）に使うビジョンモデル
+  VLLM: GeminiVLLM
   TTS: EdgeTTS
   Memory: nomem
   # tool calling（音量調整・終了ワード等）が使えない/不安定な場合は
@@ -61,6 +73,15 @@ LLM:
     base_url: https://generativelanguage.googleapis.com/v1beta/openai/
     # 音声対話は応答速度重視で flash 系を推奨。
     # 正確なモデルIDは https://ai.google.dev/gemini-api/docs/models で要確認
+    model_name: gemini-3.5-flash-lite
+    api_key: <GEMINI_API_KEY をここに>
+
+VLLM:
+  GeminiVLLM:
+    # カメラ画像解析用のビジョンモデル。LLM と同じ Gemini の OpenAI 互換
+    # エンドポイント・APIキーを使い回す（flash 系はビジョン入力対応）
+    type: openai
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
     model_name: gemini-3.5-flash-lite
     api_key: <GEMINI_API_KEY をここに>
 

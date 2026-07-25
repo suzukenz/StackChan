@@ -1,0 +1,35 @@
+--- a/main/xiaozhi-server/core/connection.py
++++ b/main/xiaozhi-server/core/connection.py
+@@ -1386,6 +1386,15 @@
+                 Action.ERROR,
+             ]:
+                 text = result.response if result.response else result.result
++                # tool_error_speech が設定されていれば、エラー文言をそのまま
++                # 読み上げず固定の友好メッセージに差し替える（原文はログに残す）
++                if result.action in (Action.NOTFOUND, Action.ERROR):
++                    friendly_text = self.config.get("tool_error_speech")
++                    if friendly_text:
++                        self.logger.bind(tag=TAG).warning(
++                            f"工具调用失败，播报友好提示。原始错误: {text}"
++                        )
++                        text = friendly_text
+                 if streamed_text and text in streamed_text:
+                     self.logger.bind(tag=TAG).debug(
+                         f"Skipping duplicate TTS for tool {tool_call_data['name']}, already streamed"
+--- a/main/xiaozhi-server/core/handle/intentHandler.py
++++ b/main/xiaozhi-server/core/handle/intentHandler.py
+@@ -210,6 +210,14 @@
+                         or result.action == Action.ERROR
+                     ):
+                         text = result.response if result.response else result.result
++                        # tool_error_speech が設定されていれば、エラー文言をそのまま
++                        # 読み上げず固定の友好メッセージに差し替える（原文はログに残す）
++                        friendly_text = conn.config.get("tool_error_speech")
++                        if friendly_text:
++                            conn.logger.bind(tag=TAG).warning(
++                                f"工具调用失败，播报友好提示。原始错误: {text}"
++                            )
++                            text = friendly_text
+                         if text is not None:
+                             speak_txt(conn, text)
+                     elif function_name != "play_music":
