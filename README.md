@@ -1,5 +1,10 @@
 # StackChan Open-Source
 
+> **This fork**: adds a self-hosted server option so the AI Agent can run against
+> external APIs (LLM/ASR/TTS) instead of the xiaozhi.me cloud. See
+> [`SELFHOST.md`](./SELFHOST.md) for the setup guide and how to restore factory
+> firmware. Changes here are kept minimal to stay easy to merge with upstream.
+
 <img src="https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/1205/K151_stack_chan_main_pictures_01.webp" width="60%">
 
 Here are StackChan related open-source resources, including source code of the StackChan firmware, remote controller firmware, mobile app (iOS and Android), and server. 
