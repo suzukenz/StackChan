@@ -1,0 +1,15 @@
+# Phase 2: point the firmware at the self-hosted xiaozhi-esp32-server instead of
+# the official https://api.tenclass.net/xiaozhi/ota/ (see main/Kconfig.projbuild,
+# CONFIG_OTA_URL, default set there).
+#
+# Usage:
+#   cp sdkconfig.defaults.local.example sdkconfig.defaults.local
+#   edit the URL below to your Mac's LAN IP (matches infra/xiaozhi-server setup)
+#   idf.py build   # CMakeLists.txt auto-detects and applies this overlay
+#
+# This file is git-ignored (see .gitignore) since it's machine/network-specific.
+#
+# See also: infra/xiaozhi-server/README.md and .suzukenz/findings-2026-07-25.md
+# for the matching server-side setup (OTA served on port 8003, WebSocket on 8000).
+
+CONFIG_OTA_URL="http://<LAN_IP>:8003/xiaozhi/ota/"
