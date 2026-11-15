@@ -1,0 +1,24 @@
+diff --git a/main/xiaozhi-server/core/providers/asr/base.py b/main/xiaozhi-server/core/providers/asr/base.py
+index dcfaf3a..eaee8e7 100644
+--- a/main/xiaozhi-server/core/providers/asr/base.py
++++ b/main/xiaozhi-server/core/providers/asr/base.py
+@@ -168,6 +168,19 @@ class ASRProviderBase(ABC):
+                 enqueue_asr_report(conn, enhanced_text, audio_snapshot)
+                 # 使用自定义模块进行上报
+                 await startToChat(conn, enhanced_text)
++            else:
++                # ASRが何も聞き取れなかったとき、無言のままだとデバイスが固まった
++                # ように見えるため、asr_empty_speech が設定されていれば固定の
++                # 聞き返しメッセージを読み上げる（LLMは経由しない）
++                retry_speech = conn.config.get("asr_empty_speech")
++                if retry_speech:
++                    logger.bind(tag=TAG).info("ASR识别结果为空，播报重听提示")
++                    # 循環import回避のため関数内でimportする
++                    from core.handle.intentHandler import speak_txt
++
++                    conn.client_abort = False
++                    conn.sentence_id = uuid.uuid4().hex
++                    speak_txt(conn, retry_speech)
+         except Exception as e:
+             logger.bind(tag=TAG).error(f"处理语音停止失败: {e}")
+             import traceback

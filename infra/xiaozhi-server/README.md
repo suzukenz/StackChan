@@ -63,7 +63,7 @@ values live):
 - `server.websocket`: replace `<LAN_IP>` with this Mac's LAN IP address
   (`ipconfig getifaddr en0`, or check System Settings > Network). This is the address
   the OTA endpoint hands out to devices, so it must be reachable on your LAN.
-- `LLM.GeminiLLM.model_name`: a current Gemini model ID (default: `gemini-3.5-flash`).
+- `LLM.GeminiLLM.model_name`: a current Gemini model ID (default: `gemini-3.5-flash-lite`).
 - `LLM.GeminiLLM.api_key`: your Gemini API key (https://aistudio.google.com/apikey).
 
 This file is a partial overlay: xiaozhi-esp32-server deep-merges it over the image's
@@ -108,6 +108,12 @@ fully erase NVS (`idf.py erase-flash`) to be safe.
 
 ## Notes
 
+- `patches/0005-edge-tts-v2.patch` upgrades `edge-tts` from 7.2.6 to 7.3.1.
+  Microsoft now requires Sec-MS-GEC v2 tokens; the old version fails the TTS
+  WebSocket handshake with HTTP 403. The fix is included from 7.3.0
+  ([upstream PR](https://github.com/rany2/edge-tts/pull/492)). Run `./build.sh`
+  and `docker compose up -d --force-recreate` to apply the dependency update;
+  restarting the existing container alone does not update its packages.
 - ASR/TTS/LLM key names and defaults were confirmed against the actual upstream
   `v0.9.6` source (`main/xiaozhi-server/config.yaml`), not assumed.
 - `Intent: function_call` requires the LLM to support tool calling. **Do not use
